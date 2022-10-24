@@ -1,25 +1,31 @@
 import pika
 from minio import Minio
+import json
+import os
 
+##### Écrire ici #####
+# TODO : Indiquer les bons credentials tels que renseignés dans l'interface web de MinIO
 client = Minio(
     endpoint="localhost:9000",
-    access_key="rqueraud",
-    secret_key="Catie515_",
+    access_key="test",
+    secret_key="password",
     secure=False
 )
-
+######################
 def callback(ch, method, properties, body):
-    string_body = "Received : %r" % body
-    print(string_body)
+    data_string = body.decode("utf-8")
+    data = json.loads(data_string)
     if not client.bucket_exists("clics"):
         client.make_bucket('clics')
 
-    with open("/tmp/myfile.txt", "w") as f:
-        f.write(string_body)
-    client.fput_object("clics", "myfile.txt", '/tmp/myfile.txt')
-    print("uploaded")
+    filepath = f"/tmp/{data['id']}.json"
+    with open(filepath, "w") as f:
+        f.write(data_string)
+    client.fput_object("clics", os.path.basename(filepath), filepath)
+    ch.basic_ack(delivery_tag=method.delivery_tag)
+    os.remove(filepath)
 
-    # client.put_object("clics", "myfile.txt", str(string_body))
+    print(f"Uploaded message with id {data['id']}")
 
 def main():
     print("Starting rabbit_to_minio.py")
@@ -29,7 +35,6 @@ def main():
     channel.queue_declare(queue='clics_to_minio')
     channel.basic_consume(
         queue='clics_to_minio',
-        auto_ack=True,
         on_message_callback=callback
     )
     channel.start_consuming()
