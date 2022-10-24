@@ -69,12 +69,8 @@ RUN npm install -g mongo-express
 RUN python3.9 -m pip install pymongo
 RUN mkdir -p /data/db
 
-# Install RabbitMQ
-RUN apt-get install -y rabbitmq-server
 # Install python dependency for rabbitmq
 RUN python3.9 -m pip install pika
-# Enable rabbitmq_management
-RUN rabbitmq-plugins enable rabbitmq_management
 
 # Install dependencies for localhost.run
 RUN apt-get install -y ssh

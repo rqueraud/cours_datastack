@@ -5,7 +5,7 @@ import json
 
 def main():
     print("Starting clics.py")
-    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+    connection = pika.BlockingConnection(pika.URLParameters(rabbit_url))
     channel = connection.channel()
 
     while True:

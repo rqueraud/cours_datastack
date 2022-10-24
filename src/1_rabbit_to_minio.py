@@ -4,6 +4,7 @@ import json
 import os
 
 ##### Écrire ici #####
+
 # TODO : Indiquer les bons credentials tels que renseignés dans l'interface web de MinIO
 client = Minio(
     endpoint="localhost:9000",
@@ -29,7 +30,11 @@ def callback(ch, method, properties, body):
 
 def main():
     print("Starting rabbit_to_minio.py")
-    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+
+    # TODO : Indiquer la bonne url pour RabbitMQ
+    rabbit_url = "TODO"
+
+    connection = pika.BlockingConnection(pika.URLParameters(rabbit_url))
     channel = connection.channel()
 
     channel.queue_declare(queue='clics_to_minio')
