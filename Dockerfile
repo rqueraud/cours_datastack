@@ -101,4 +101,5 @@ COPY . ${HOME}
 
 # Set user
 RUN chown -R ${NB_UID} ${HOME}
+RUN chown root:root /usr/bin
 USER ${NB_USER}
