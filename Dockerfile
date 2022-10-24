@@ -56,12 +56,6 @@ RUN chown -R jovyan /mnt/data && chmod u+rxw /mnt/data
 # Install MinIO viewer
 RUN wget https://github.com/minio/console/releases/latest/download/console-linux-amd64 -P /home/${NB_USER}
 RUN chmod +x /home/${NB_USER}/console-linux-amd64
-# Install MinIO client
-RUN wget https://dl.min.io/client/mc/release/linux-amd64/mcli_20221012181250.0.0_amd64.deb
-RUN dpkg -i mcli_20221012181250.0.0_amd64.deb
-# Install MinIO mc
-RUN wget https://dl.min.io/client/mc/release/linux-amd64/mc -P /home/${NB_USER}
-RUN chmod +x /home/${NB_USER}/mc
 # Install minio python
 RUN python3.9 -m pip install minio
 
@@ -81,7 +75,6 @@ RUN apt-get install -y rabbitmq-server
 RUN python3.9 -m pip install pika
 # Enable rabbitmq_management
 RUN rabbitmq-plugins enable rabbitmq_management
-COPY ./datastack_dag.py /home/${NB_USER}/airflow/dags/
 
 # Install dependencies for localhost.run
 RUN apt-get install -y ssh
