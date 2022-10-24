@@ -49,8 +49,8 @@ RUN python3.9 -m pip install redis
 
 # Install MinIO
 RUN apt-get install -y wget
-RUN wget https://dl.min.io/server/minio/release/linux-amd64/minio_20221021223748.0.0_amd64.deb
-RUN dpkg -i minio_20221021223748.0.0_amd64.deb
+RUN wget https://dl.min.io/server/minio/release/linux-amd64/minio_20221024183507.0.0_amd64.deb
+RUN dpkg -i minio_20221024183507.0.0_amd64.deb
 RUN mkdir /mnt/data
 RUN chown -R jovyan /mnt/data && chmod u+rxw /mnt/data
 # Install MinIO viewer
