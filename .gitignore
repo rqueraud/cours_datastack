@@ -1,1 +1,5 @@
-src/correction*
+*correction*
+__pycache__
+airflow/logs/
+Posts.json
+.DS_Store

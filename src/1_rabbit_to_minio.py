@@ -2,44 +2,48 @@ import pika
 from minio import Minio
 import json
 import os
+import time
 
-##### Écrire ici #####
-
-# TODO : Indiquer les bons credentials tels que renseignés dans l'interface web de MinIO
 client = Minio(
-    endpoint="localhost:9000",
-    access_key="test",
-    secret_key="password",
+    endpoint="minio:9000",
+    access_key="minioadmin",
+    secret_key="minioadmin",
     secure=False
 )
-######################
+
+def safe_connect_rabbitmq():
+    channel = None
+    while not channel:
+        try:
+            connection = pika.BlockingConnection(pika.URLParameters("amqp://rabbitmq"))
+            channel = connection.channel()
+        except pika.exceptions.AMQPConnectionError:
+            time.sleep(1)
+    return channel
+
 def callback(ch, method, properties, body):
     data_string = body.decode("utf-8")
-    data = json.loads(data_string)
-    if not client.bucket_exists("clics"):
-        client.make_bucket('clics')
+    if not client.bucket_exists("posts"):
+        client.make_bucket('posts')
 
-    filepath = f"/tmp/{data['id']}.json"
+    unique_id = time.time()*1000
+    filepath = f"/tmp/{unique_id}.json"
     with open(filepath, "w") as f:
         f.write(data_string)
-    client.fput_object("clics", os.path.basename(filepath), filepath)
+    client.fput_object("posts", os.path.basename(filepath), filepath)
     ch.basic_ack(delivery_tag=method.delivery_tag)
     os.remove(filepath)
 
-    print(f"Uploaded message with id {data['id']}")
+    print(f"Uploaded message with id {unique_id}")
 
 def main():
     print("Starting rabbit_to_minio.py")
 
-    # TODO : Indiquer la bonne url pour RabbitMQ
-    rabbit_url = "TODO"
+    channel = safe_connect_rabbitmq()
 
-    connection = pika.BlockingConnection(pika.URLParameters(rabbit_url))
-    channel = connection.channel()
-
-    channel.queue_declare(queue='clics_to_minio')
+    channel.queue_declare(queue='posts_to_minio')
     channel.basic_consume(
-        queue='clics_to_minio',
+        queue='posts_to_minio',
         on_message_callback=callback
     )
     channel.start_consuming()
