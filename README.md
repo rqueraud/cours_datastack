@@ -1,6 +1,9 @@
 # TP - Outils pour la Data
 
 ```bash
+echo -e "AIRFLOW_UID=$(id -u)" > .env
+chown -R $(whoami) ./airflow/*
+
 docker compose pull
 docker compose up -d --build
 ```
