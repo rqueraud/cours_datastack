@@ -16,3 +16,18 @@ services:
     ports:
       - 9000:9000
       - 9001:9001
+
+  rabbit_to_minio:
+    image: rabbit_to_minio
+
+  rabbit_to_mongo:
+    image: rabbit_to_mongo
+
+  mongodb:
+    image: mongo
+    hostname: mongodb
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin

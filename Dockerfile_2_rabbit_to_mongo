@@ -1,0 +1,18 @@
+# Le code python permettant de consommer la queue RabbitMQ et d’écrire
+# dans MinIO vous est donné (./src/1_rabbit_to_minio.py).
+# ● Les données (Posts.json) sont sur Moodle, à placer dans le dossier
+# ./data/movies-stackexchange/json.
+# ● Vous pouvez :
+#   ○ Créer une nouvelle image Docker (Dockerfile à créer) qui copie et exécute ce script.
+#       ■ Les librairies python “minio” et “pika” devront être installées.
+#       ■ L’instruction ENTRYPOINT dans le dockerfile permet de spécifier la commande à utiliser au lancement.
+#   ○ Ajouter un nouveau service dans le fichier ./docker-compose.yml utilisant cette image.
+# ● La commande docker compose up --build permet de mettre à jour les services.
+
+FROM python:3.9
+
+RUN pip install pymongo pika
+
+COPY ./src/2_rabbit_to_mongo.py /app/2_rabbit_to_mongo.py
+
+ENTRYPOINT ["python", "-u", "/app/2_rabbit_to_mongo.py"]
