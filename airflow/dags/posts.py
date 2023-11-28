@@ -43,7 +43,7 @@ def post():
 
 with DAG(
     dag_id="DAG_stackexchange_posts",
-    schedule=timedelta(seconds=10),
+    schedule=timedelta(seconds=10*6),
     start_date=pendulum.datetime(2021, 1, 1, tz="UTC"),
     is_paused_upon_creation=False,
     catchup=False,

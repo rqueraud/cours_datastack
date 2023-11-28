@@ -7,16 +7,18 @@ from datetime import timedelta
 
 log = logging.getLogger(__name__)
 
-MONGO_USERNAME = "admin"
-MONGO_PASSWORD = "admin"
-MONGO_HOST = "mongodb"
-MONGO_PORT = 27017
-MONGO_DB = "movies-stackexchange"
-MONGO_COLLECTION = "post"
-MONGO_URI = f"mongodb://{MONGO_USERNAME}:{MONGO_PASSWORD}@{MONGO_HOST}:{MONGO_PORT}"
-
 def mongo_to_bigquery():
     import pymongo
+    from google.cloud import bigquery
+    from google.oauth2 import service_account
+
+    MONGO_USERNAME = "admin"
+    MONGO_PASSWORD = "admin"
+    MONGO_HOST = "mongodb"
+    MONGO_PORT = 27017
+    MONGO_DB = "movies-stackexchange"
+    MONGO_COLLECTION = "post"
+    MONGO_URI = f"mongodb://{MONGO_USERNAME}:{MONGO_PASSWORD}@{MONGO_HOST}:{MONGO_PORT}"
 
     class Database:
         def __init__(self):
@@ -46,45 +48,31 @@ def mongo_to_bigquery():
 
     result = db.aggregate(pipeline)
 
-    # TODO: terminer
+    posts_count = list(map(lambda p : {"UserId": None if p["_id"] == None else int(p["_id"]),"PostsCount": p["count"]}, list(result)))
 
+    project_id = "tp-bigquery"
+    dataset_id = "posts"
+    table_id = "posts_count"
 
-
-
-
-def post():
-    import random
-    import os
-    import json
-    import pymongo
-
-    data_filepath = "./data/movies-stackexchange/json/Posts.json"
-    print(data_filepath)
-    print(os.getcwd())
-    with open(data_filepath, "r") as f:
-        content = f.read()
-        posts = json.loads(content)
-        post = random.choice(posts)
-        
-    message = json.dumps(post, indent=4)
-
-    connection = pika.BlockingConnection(pika.URLParameters("amqp://rabbitmq"))
-    channel = connection.channel()
-
-    channel.queue_declare(queue='posts_to_minio')
-    channel.basic_publish(
-        exchange='',
-        routing_key='posts_to_minio',
-        body=message
+    # Set up credentials (replace 'path/to/your/credentials.json' with your service account key file)
+    credentials = service_account.Credentials.from_service_account_file(
+        "./config/service-account.json",
     )
 
-    channel.queue_declare(queue='posts_to_mongo')
-    channel.basic_publish(
-        exchange='',
-        routing_key='posts_to_mongo',
-        body=message
-    )
+    # Create a BigQuery client
+    client = bigquery.Client(project=project_id, credentials=credentials)
 
+    # Delete the dataset if it already exists and create a new one
+    client.delete_dataset(dataset_id, delete_contents=True, not_found_ok=True)
+    client.create_dataset(dataset_id)
+
+    # Specify the dataset and table to which you want to upload the data
+    dataset_ref = client.dataset(dataset_id)
+    table_ref = dataset_ref.table(table_id)
+
+    job = client.load_table_from_json(posts_count, table_ref)
+    job.result()  # Wait for the job to complete
+    print(f"Loaded {job.output_rows} rows into {table_id}")
 
 with DAG(
     dag_id="DAG_mongo_to_bigquery",
@@ -100,6 +88,6 @@ with DAG(
 
     virtual_classic = PythonVirtualenvOperator(
         task_id="mongo-to-bigquery",
-        requirements="pymongo",
+        requirements=["pymongo", "google-cloud-bigquery"],
         python_callable=mongo_to_bigquery,
     )
