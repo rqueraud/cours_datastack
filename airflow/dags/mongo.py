@@ -3,6 +3,7 @@ import logging
 from airflow import DAG
 from airflow.decorators import task
 from airflow.operators.python import ExternalPythonOperator, PythonVirtualenvOperator, is_venv_installed
+from airflow.operators.bash_operator import BashOperator
 from datetime import timedelta
 
 log = logging.getLogger(__name__)
@@ -50,7 +51,7 @@ def mongo_to_bigquery():
 
     posts_count = list(map(lambda p : {"UserId": None if p["_id"] == None else int(p["_id"]),"PostsCount": p["count"]}, list(result)))
 
-    project_id = "tp-bigquery"
+    project_id = "bigquery-404409"
     dataset_id = "posts"
     table_id = "posts_count"
 
@@ -86,8 +87,18 @@ with DAG(
     if not is_venv_installed():
         log.warning("The virtalenv_python example task requires virtualenv, please install it.")
 
+
+    install_dependencies = BashOperator(
+    task_id='install_dependencies',
+    bash_command='pip install -r ../dependencies/requirements.txt',
+    dag=dag,
+    )
+
     virtual_classic = PythonVirtualenvOperator(
         task_id="mongo-to-bigquery",
         requirements=["pymongo", "google-cloud-bigquery"],
         python_callable=mongo_to_bigquery,
+        system_site_packages=False #Use what was already installed in install_dependencies
     )
+
+    install_dependencies >> virtual_classic
