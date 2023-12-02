@@ -51,7 +51,8 @@ def mongo_to_bigquery():
 
     posts_count = list(map(lambda p : {"UserId": None if p["_id"] == None else int(p["_id"]),"PostsCount": p["count"]}, list(result)))
 
-    project_id = "bigquery-404409"
+    #project_id = "bigquery-404409"
+    project_id = "tp-bigquery"
     dataset_id = "posts"
     table_id = "posts_count"
 
@@ -89,16 +90,15 @@ with DAG(
 
 
     install_dependencies = BashOperator(
-    task_id='install_dependencies',
-    bash_command='pip install -r ../dependencies/requirements.txt',
-    dag=dag,
+        task_id='install_dependencies',
+        bash_command='pip install pika pymongo google-cloud-bigquery',
+        dag=dag,
     )
 
-    virtual_classic = PythonVirtualenvOperator(
+    external_classic = ExternalPythonOperator(
         task_id="mongo-to-bigquery",
-        requirements=["pymongo", "google-cloud-bigquery"],
-        python_callable=mongo_to_bigquery,
-        system_site_packages=False #Use what was already installed in install_dependencies
+        python="/usr/local/bin/python",
+        python_callable=mongo_to_bigquery
     )
 
-    install_dependencies >> virtual_classic
+    install_dependencies >> external_classic

@@ -45,29 +45,23 @@ def post():
 
 with DAG(
     dag_id="DAG_stackexchange_posts",
-    schedule=timedelta(seconds=10*6),
+    schedule=timedelta(seconds=60),
     start_date=pendulum.datetime(2021, 1, 1, tz="UTC"),
     is_paused_upon_creation=False,
     catchup=False,
     tags=[],
 ) as dag:
     
-    if not is_venv_installed():
-        log.warning("The virtalenv_python example task requires virtualenv, please install it.")
-
     install_dependencies = BashOperator(
-    task_id='install_dependencies',
-    bash_command='pip install -r ../dependencies/requirements.txt',
-    dag=dag,
-)
-
-
-
-    virtual_classic = PythonVirtualenvOperator(
-        task_id="post",
-        python_callable=post,
-        requirements=["pika"],  
-        system_site_packages=False #Use what was already installed in install_dependencies
+        task_id='install_dependencies',
+        bash_command='pip install pika pymongo google-cloud-bigquery',
+        dag=dag,
     )
 
-    install_dependencies >> virtual_classic
+    external_classic = ExternalPythonOperator(
+        task_id="post",
+        python="/usr/local/bin/python",
+        python_callable=post
+    )
+
+    install_dependencies >> external_classic
