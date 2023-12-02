@@ -1,9 +1,7 @@
 import pendulum
 import logging
 from airflow import DAG
-from airflow.decorators import task
-from airflow.operators.python import ExternalPythonOperator, PythonVirtualenvOperator, is_venv_installed
-from airflow.operators.bash_operator import BashOperator
+from airflow.operators.python import ExternalPythonOperator
 from datetime import timedelta
 
 log = logging.getLogger(__name__)
@@ -51,17 +49,10 @@ with DAG(
     catchup=False,
     tags=[],
 ) as dag:
-    
-    install_dependencies = BashOperator(
-        task_id='install_dependencies',
-        bash_command='pip install pika pymongo google-cloud-bigquery',
-        dag=dag,
-    )
-
     external_classic = ExternalPythonOperator(
         task_id="post",
         python="/usr/local/bin/python",
         python_callable=post
     )
 
-    install_dependencies >> external_classic
+    external_classic
