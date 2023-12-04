@@ -44,7 +44,8 @@ def user():
 
 with DAG(
     dag_id="DAG_ingest_users",
-    schedule="@once",
+    # manually trigger this DAG
+    schedule_interval=None,
     start_date=pendulum.datetime(2021, 1, 1, tz="UTC"),
     is_paused_upon_creation=False,
     catchup=False,

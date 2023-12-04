@@ -42,7 +42,6 @@ def mongo_to_bigquery_user():
     db = Database()
 
     pipeline = [
-        { "$match": {"@Id": "11"}},
         { "$lookup": { "from": "post", "localField": "@Id", "foreignField": "@OwnerUserId", "as": "userPosts"}},
         { "$unwind": { "path": "$userPosts"}},
         { "$sort": { "userPosts.@CreationDate": -1}}, 
