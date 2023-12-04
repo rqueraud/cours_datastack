@@ -1,8 +1,7 @@
 import pendulum
 import logging
 from airflow import DAG
-from airflow.decorators import task
-from airflow.operators.python import ExternalPythonOperator, PythonVirtualenvOperator, is_venv_installed
+from airflow.operators.python import ExternalPythonOperator
 from datetime import timedelta
 
 log = logging.getLogger(__name__)
@@ -33,28 +32,27 @@ def post():
         body=message
     )
 
-    channel.queue_declare(queue='posts_to_redis')
+    channel.queue_declare(queue='posts_to_mongo')
     channel.basic_publish(
         exchange='',
-        routing_key='posts_to_redis',
+        routing_key='posts_to_mongo',
         body=message
     )
 
 
+
 with DAG(
     dag_id="DAG_stackexchange_posts",
-    schedule=timedelta(seconds=10),
+    schedule=timedelta(seconds=60),
     start_date=pendulum.datetime(2021, 1, 1, tz="UTC"),
     is_paused_upon_creation=False,
     catchup=False,
     tags=[],
 ) as dag:
-    
-    if not is_venv_installed():
-        log.warning("The virtalenv_python example task requires virtualenv, please install it.")
-
-    virtual_classic = PythonVirtualenvOperator(
+    external_classic = ExternalPythonOperator(
         task_id="post",
-        requirements="pika",
-        python_callable=post,
+        python="/usr/local/bin/python",
+        python_callable=post
     )
+
+    external_classic

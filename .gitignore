@@ -2,6 +2,7 @@
 __pycache__
 airflow/logs/
 Posts.json
+Users.json
 .DS_Store
 .env
 service-account.json
