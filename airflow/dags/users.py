@@ -7,10 +7,8 @@ from datetime import timedelta
 log = logging.getLogger(__name__)
 
 def user():
-    import random
     import os
     import json
-    import pika
     import pymongo
 
     MONGO_USERNAME = "admin"
