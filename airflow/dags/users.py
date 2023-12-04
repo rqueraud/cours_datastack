@@ -11,6 +11,19 @@ def user():
     import os
     import json
     import pika
+    import pymongo
+
+    MONGO_USERNAME = "admin"
+    MONGO_PASSWORD = "admin"
+    MONGO_HOST = "mongodb"
+    MONGO_PORT = 27017
+    MONGO_DB = "movies-stackexchange"
+    MONGO_COLLECTION = "user"
+    MONGO_URI = f"mongodb://{MONGO_USERNAME}:{MONGO_PASSWORD}@{MONGO_HOST}:{MONGO_PORT}"
+
+    client = pymongo.MongoClient(MONGO_URI)
+    db = client[MONGO_DB]
+    collection = db[MONGO_COLLECTION]
 
     data_filepath = "./data/movies-stackexchange/json/Users.json"
     print(data_filepath)
@@ -18,26 +31,16 @@ def user():
     with open(data_filepath, "r") as f:
         content = f.read()
         users = json.loads(content)
-        # user = random.choice(users)
-        
-    message = json.dumps(users, indent=4)
 
-    connection = pika.BlockingConnection(pika.URLParameters("amqp://rabbitmq"))
-    channel = connection.channel()
+    if collection.count_documents({}) == 0:
+        print("Creating indexes...")
+        # Delete previous indexes
+        collection.drop_indexes()
+        # Create new indexes
+        collection.create_index([("@Id", 1)], unique=True)
+    
+    collection.insert_many(users)
 
-    # channel.queue_declare(queue='users_to_minio')
-    # channel.basic_publish(
-    #     exchange='',
-    #     routing_key='users_to_minio',
-    #     body=message
-    # )
-
-    channel.queue_declare(queue='users_to_mongo')
-    channel.basic_publish(
-        exchange='',
-        routing_key='users_to_mongo',
-        body=message
-    )
 
 
 
