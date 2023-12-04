@@ -16,4 +16,4 @@ with DAG(
         dag=dag,
     )
 
-    install_dependencies
+    install_dependencies >> ingest_users
